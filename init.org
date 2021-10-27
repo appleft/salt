@@ -1,0 +1,141 @@
++#+TITLE: Emacs config file
+#+PROPERTY: header-args:emacs-lisp :tangle ./init.el
+
+* early-init.el Configuration
+
+#+begin_src emacs-lisp :tangle ./early-init.el
+;; gc.
+(setq gc-cons-threshold 402653184)
+(add-hook 'after-emacs-hook '(lambda ()
+			       ;; restore after startup
+			       (setq gc-cons-threshold 16777216)))
+
+;; Prevent the glimpse of un-styled Emacs by disabling these UI elements early.
+(push '(menu-bar-lines . 0) default-frame-alist)
+(push '(tool-bar-lines . 0) default-frame-alist)
+(push '(vertical-scroll-bars) default-frame-alist)
+
+;; Resizing the Emacs frame can be a terribly expensive part of changing the
+;; font. By inhibiting this, we easily halve startup times with fonts that are
+;; larger than the system default.
+(setq frame-inhibit-implied-resize t)
+
+;; In Emacs 27+, package initialization occurs before `user-init-file' is
+;; loaded, but after `early-init-file'. We must prevent Emacs from doing
+;; it early!
+(setq package-enable-at-startup nil)
+
+;; Prevent unwanted runtime builds in gccemacs (native-comp); packages are
+;; compiled ahead-of-time when they are installed and site files are compiled
+;; when gccemacs is installed.
+(setq comp-deferred-compilation nil)
+
+#+end_src
+
+
+
+
+* Init.el Configuration
+
+** Some Basic Settings
+
+#+begin_src emacs-lisp
+
+;; Profile emacs startup
+(add-hook 'emacs-startup-hook
+          (lambda ()
+            (message "*** Emacs loaded in %s with %d garbage collections."
+                     (format "%.2f seconds"
+                             (float-time
+                              (time-subtract after-init-time before-init-time)))
+                     gcs-done)))
+
+(let (file-name-handler-alist)
+  ;; Ensure Emacs is running out of this file's directory
+  (setq user-emacs-directory (file-name-directory load-file-name)))
+
+(defvar salt-dir-private (expand-file-name "private" user-emacs-directory)
+  "All files you create under the private folder are yours for personalization.")
+
+;;; .local folder
+(defvar salt-dir-local (expand-file-name ".local" user-emacs-directory)
+  "Folder of configure files, backup files, template files and so on.")
+
+;;; Cache folder
+(defvar salt-dir-cache (expand-file-name "cache" salt-dir-local))
+
+;;; Template folder
+(defvar salt-dir-template (expand-file-name "template" salt-dir-local)
+  "Folder path of template files.")
+
+;; the load-path of core settings
+(add-to-list 'load-path (expand-file-name "elisp/" user-emacs-directory))
+
+;;; Create folders
+(dolist (dir (list salt-dir-private
+                   salt-dir-local
+                   salt-dir-cache
+                   salt-dir-template))
+  (when (not (file-directory-p dir))
+    (make-directory dir)))
+
+#+end_src
+
+** Basic UI
+
+#+begin_src emacs-lisp
+
+;;; Font and frame size
+;; frame size
+(setq initial-frame-alist
+      (quote ((fullscreen . maximized))))
+
+;;; Remove menu-bar, scroll-bar and tool-bar.
+(menu-bar-mode -1)
+(toggle-scroll-bar -1)
+(scroll-bar-mode -1)
+(tool-bar-mode -1)
+
+(setq visible-bell t)
+
+#+end_src
+
+
+** Straight
+
+#+begin_src emacs-lisp
+
+(defvar bootstrap-version)
+(let ((bootstrap-file
+       (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
+      (bootstrap-version 5))
+  (unless (file-exists-p bootstrap-file)
+    (with-current-buffer
+        (url-retrieve-synchronously
+         "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"
+         'silent 'inhibit-cookies)
+      (goto-char (point-max))
+      (eval-print-last-sexp)))
+  (load bootstrap-file nil 'nomessage))
+
+;;; install use-package
+(straight-use-package 'use-package)
+(eval-and-compile
+  (setq use-package-always-ensure nil)   ;; ESSENTIAL for `straight.el'
+  (setq use-package-always-defer nil)
+  (setq use-package-always-demand nil)
+  (setq use-package-expand-minimally nil)
+  (setq use-package-enable-imenu-support t)
+  (setq use-package-compute-statistics nil))
+
+;;; provides `straight-x-clean-unused-repos' (part of `straight.el')
+(use-package straight-x
+  :defer t)
+
+#+end_src
+
+** UI and
+
+#+begin_src
+
+#+end_src

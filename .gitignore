@@ -3,6 +3,7 @@
 
 # Packaging
 .cask
+straight/
 
 # Backup files
 *~
