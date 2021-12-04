@@ -1,4 +1,4 @@
-+#+TITLE: Emacs config file
+#+TITLE: Emacs config file
 #+PROPERTY: header-args:emacs-lisp :tangle ./init.el
 
 * early-init.el Configuration
