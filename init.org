@@ -336,6 +336,7 @@
 ;;; Enable richer annotations using the Marginalia package
 (use-package marginalia
   :straight t
+  :defer t
   ;; Either bind `marginalia-cycle` globally or only in the minibuffer
   :bind (("M-A" . marginalia-cycle)
          :map minibuffer-local-map
@@ -354,7 +355,7 @@
 ;;; embark
 (use-package embark
   :straight t
-
+  :defer t
   :bind
   (("C-." . embark-act)         ;; pick some comfortable binding
    ("M-." . embark-dwim)        ;; good alternative: M-.
@@ -378,6 +379,7 @@
 #+begin_src emacs-lisp
 (use-package embark-consult
   :straight t
+  :defer t
   :after (embark consult)
   :demand t ; only necessary if you have the hook below
   ;; if you want to have consult previews as you move around an
@@ -386,11 +388,40 @@
   (embark-collect-mode . consult-preview-at-point-mode))
 #+end_src
 
+* helpful
+#+begin_src emacs-lisp
+(use-package helpful
+  :straight t
+  :defer t
+  :init
+  (global-set-key (kbd "C-h f") #'helpful-callable)
+  (global-set-key (kbd "C-h v") #'helpful-variable)
+  (global-set-key (kbd "C-h k") #'helpful-key)
+  ;; Lookup the current symbol at point. C-c C-d is a common keybinding
+  ;; for this in lisp modes.
+  (global-set-key (kbd "C-c C-d") #'helpful-at-point)
+
+  ;; Look up *F*unctions (excludes macros).
+  ;;
+  ;; By default, C-h F is bound to `Info-goto-emacs-command-node'. Helpful
+  ;; already links to the manual, if a function is referenced there.
+  (global-set-key (kbd "C-h F") #'helpful-function)
+
+  ;; Look up *C*ommands.
+  ;;
+  ;; By default, C-h C is bound to describe `describe-coding-system'. I
+  ;; don't find this very useful, but it's frequently useful to only
+  ;; look at interactive functions.
+  (global-set-key (kbd "C-h C") #'helpful-command))
+
+  #+end_src
+
 * magit
 #+begin_src emacs-lisp
 ;;; magit
 (use-package magit
   :straight t
+  :defer t
   :init
   (setq transient-levels-file (expand-file-name "transient/levels" salt-dir-local)
         transient-values-file (expand-file-name "transient/values" salt-dir-local)
@@ -417,17 +448,18 @@
 #+begin_src emacs-lisp
 (use-package org
   :straight (:host github
-             :repo "emacs-straight/org-mode"))
+             :repo "emacs-straight/org-mode")
+  :defer t
+  )
 
 (use-package org-contrib
   :straight (:host github
-             :repo "emacsmirror/org-contrib"))
+             :repo "emacsmirror/org-contrib")
+  :defer t)
 
 #+end_src
-
-#+RESULTS:
-
-* evil
+* editor
+** evil
 #+begin_src emacs-lisp
 (use-package evil
   :straight t
@@ -441,5 +473,41 @@
   :straight t
   :after evil
   )
+
+#+end_src
+
+
+* eshell
+#+begin_src emacs-lisp
+(use-package eshell
+  :defer t
+  :commands (eshell/pushd eshell/pwd)
+  :init
+  (setq eshell-directory-name (concat user-emacs-directory ".local/eshell/")))
+
+(use-package eshell-z
+  :straight t
+  :defer t
+  :hook ((eshell-mode . (lambda () (require 'eshell-z)))
+ (eshell-z-change-dir .  (lambda () (eshell/pushd (eshell/pwd))))))
+
+(use-package esh-help
+  :straight t
+  :defer t
+  :config
+  (setup-esh-help-eldoc))
+
+#+end_src
+
+* Ruby
+** ruby-mode
+#+begin_src emacs-lisp
+(use-package ruby-mode
+  :straight t)
+#+end_src
+
+#+begin_src emacs-lisp
+(use-package inf-ruby
+  :straight t)
 
 #+end_src

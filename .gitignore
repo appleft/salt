@@ -1,6 +1,7 @@
 # Compiled
 *.elc
 
+
 # Packaging
 .cask
 straight/
