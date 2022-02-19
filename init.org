@@ -281,39 +281,12 @@
 
 #+end_src
 
-** savehist and emacs
+** orderless
 #+begin_src emacs-lisp
-(use-package savehist
-  :straight (:type built-in)
-  :init
-  (savehist-mode))
+(use-package orderless
+  :straight t
+  :custom (completion-styles '(orderless)))
 #+end_src
-
-#+begin_src emacs-lisp
-(use-package emacs
-  :straight (:type built-in)
-  :init
-  ;; Add prompt indicator to `completing-read-multiple'.
-  ;; Alternatively try `consult-completing-read-multiple'.
-  (defun crm-indicator (args)
-    (cons (concat "[CRM] " (car args)) (cdr args)))
-  (advice-add #'completing-read-multiple :filter-args #'crm-indicator)
-
-  ;; Do not allow the cursor in the minibuffer prompt
-  (setq minibuffer-prompt-properties
-        '(read-only t cursor-intangible t face minibuffer-prompt))
-  (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode)
-
-  ;; Emacs 28: Hide commands in M-x which do not work in the current mode.
-  ;; Vertico commands are hidden in normal buffers.
-  ;; (setq read-extended-command-predicate
-  ;;       #'command-completion-default-include-p)
-
-  ;; Enable recursive minibuffers
-  (setq enable-recursive-minibuffers t))
-
-#+end_src
-
 
 ** cousult
 #+begin_src emacs-lisp
@@ -330,6 +303,8 @@
   :config
   (fset 'multi-occur #'consult-multi-occur))
 #+end_src
+
+
 
 ** marginalia
 #+begin_src emacs-lisp
@@ -388,6 +363,58 @@
   (embark-collect-mode . consult-preview-at-point-mode))
 #+end_src
 
+* Emacs relative
+** savehist and emacs
+以下這些設定，是為了 vertico 這個套件所做的設定。
+#+begin_src emacs-lisp
+;; Persist history over Emacs restarts. Vertico sorts by history position.
+(use-package savehist
+  :straight (:type built-in)
+  :init
+  (savehist-mode))
+
+;; A few more useful configurations for vertico ...
+(use-package emacs
+  :straight (:type built-in)
+  :init
+  ;; Add prompt indicator to `completing-read-multiple'.
+  ;; Alternatively try `consult-completing-read-multiple'.
+  (defun crm-indicator (args)
+    (cons (concat "[CRM] " (car args)) (cdr args)))
+  (advice-add #'completing-read-multiple :filter-args #'crm-indicator)
+
+  ;; Do not allow the cursor in the minibuffer prompt
+  (setq minibuffer-prompt-properties
+        '(read-only t cursor-intangible t face minibuffer-prompt))
+  (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode)
+
+  ;; Emacs 28: Hide commands in M-x which do not work in the current mode.
+  ;; Vertico commands are hidden in normal buffers.
+  ;; (setq read-extended-command-predicate
+  ;;       #'command-completion-default-include-p)
+
+  ;; Enable recursive minibuffers
+  (setq enable-recursive-minibuffers t))
+
+#+end_src
+
+** undo
+#+begin_src emacs-lisp
+(use-package undo-tree
+  :straight t
+  :defer t)
+
+#+end_src
+** ibuffer
+#+begin_src emacs-lisp
+(use-package ibuffer-projectile
+  :straight t
+  :defer t
+  :after projectile
+  )
+
+#+end_src
+
 * helpful
 #+begin_src emacs-lisp
 (use-package helpful
@@ -416,18 +443,6 @@
 
   #+end_src
 
-* magit
-#+begin_src emacs-lisp
-;;; magit
-(use-package magit
-  :straight t
-  :defer t
-  :init
-  (setq transient-levels-file (expand-file-name "transient/levels" salt-dir-local)
-        transient-values-file (expand-file-name "transient/values" salt-dir-local)
-        transient-history-file (expand-file-name "transient/history" salt-dir-local))
-  :defer t)
-#+end_src
 
 * projectile
 #+begin_src emacs-lisp
@@ -449,8 +464,7 @@
 (use-package org
   :straight (:host github
              :repo "emacs-straight/org-mode")
-  :defer t
-  )
+  :defer t)
 
 (use-package org-contrib
   :straight (:host github
@@ -471,15 +485,15 @@
 #+begin_src emacs-lisp
 (use-package evil-collection
   :straight t
-  :after evil
-  )
+  :after evil)
 
 #+end_src
 
 
-* eshell
+* term
+** eshell
 #+begin_src emacs-lisp
-(use-package eshell
+(use-package eshell ;built-in
   :defer t
   :commands (eshell/pushd eshell/pwd)
   :init
@@ -489,7 +503,7 @@
   :straight t
   :defer t
   :hook ((eshell-mode . (lambda () (require 'eshell-z)))
- (eshell-z-change-dir .  (lambda () (eshell/pushd (eshell/pwd))))))
+         (eshell-z-change-dir . (lambda () (eshell/pushd (eshell/pwd))))))
 
 (use-package esh-help
   :straight t
@@ -497,10 +511,18 @@
   :config
   (setup-esh-help-eldoc))
 
+(use-package eshell-syntax-highlighting
+  :straight t
+  :after eshell
+  :defer t
+  :hook
+  (eshell-mode . eshell-syntax-highlighting-mode))
 #+end_src
 
-* Ruby
-** ruby-mode
+
+* Languages
+** Ruby
+*** ruby-mode
 #+begin_src emacs-lisp
 (use-package ruby-mode
   :straight t)
@@ -509,5 +531,108 @@
 #+begin_src emacs-lisp
 (use-package inf-ruby
   :straight t)
+#+end_src
+
+* Tools
+** RGB
+#+begin_src emacs-lisp
+(use-package rainbow-mode
+  :straight t
+  :defer t)
+
+(use-package kurecolor
+  :straight t
+  :defer t)
+
+#+end_src
+
+** magit
+#+begin_src emacs-lisp
+;;; magit
+(use-package magit
+  :straight t
+  :defer t
+  :init
+  (setq transient-levels-file (expand-file-name "transient/levels" salt-dir-local)
+        transient-values-file (expand-file-name "transient/values" salt-dir-local)
+        transient-history-file (expand-file-name "transient/history" salt-dir-local))
+  :defer t)
+#+end_src
+
+** gist
+#+begin_src emacs-lisp
+(use-package gist
+  :straight t
+  :defer t)
+
+#+end_src
+** hydra
+#+begin_src emacs-lisp
+(use-package hydra
+  :straight t
+  :defer t
+  :init
+  )
+
+#+end_src
+
+* vi-like editor
+
+#+begin_src emacs-lisp
+
+
+#+end_src
+
+#+begin_src emacs-lisp
+
+(defhydra salt (:color blue :columns 5)
+  "Launch!"
+  ("b" salt-buffers/body "+buffers")
+  ("f" salt-files/body "+files")
+  ("h" salt-help/body "+help & info")
+  ("p" salt-project/body "+projects")
+  ("s" salt-search/body "+search")
+  ("t" salt-toggles/body "+toggles")
+  ("q" nil "cancel")
+  ("SPC" execute-extended-command "M-x")
+  ("<escape>" enter-salt-cmd-mode "Exit")
+  )
+
+#+end_src
+
+** smartparens
+#+begin_src emacs-lisp
+(use-package smartparens
+  :straight t
+  :defer t
+  )
+
+#+end_src
+
+* Web relative
+** emmet-mode
+#+begin_src emacs-lisp
+(use-package emmet-mode
+  :straight t
+  :defer t)
+#+end_src
+
+** web-mode
+#+begin_src emacs-lisp
+(use-package web-mode
+  :straight t
+  :defer t)
+
+#+end_src
+
+** javascript
+#+begin_src emacs-lisp
+(use-package rjsx-mode
+  :straight t
+  :defer t)
+
+(use-package xref-js2
+  :straight t
+  :defer t)
 
 #+end_src
